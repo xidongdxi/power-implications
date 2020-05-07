@@ -6,6 +6,8 @@ library(shinythemes)
 library(markdown)
 library(ggplot2)
 library(plotly)
+library(mvtnorm)
+library(rpact)
 
 # Functions
 source("functions.R")
