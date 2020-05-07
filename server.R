@@ -103,4 +103,68 @@ function(input, output, session) {
       )
     ggplotly(p)
   })
+    
+  #********************************************************************************************************
+  # GSD start
+  #********************************************************************************************************
+  value <- reactiveValues(etaGSD = 0) # create reactive variables for dilution effect eta
+  value <- reactiveValues(psiGSD = 1) # create reactive variables for variance inflation psi
+  
+  output$dilutionSettings <- renderUI({ # show input for eta if box is unticked
+    if(input$dilutionCheck == FALSE) {
+      sliderInput("etaGSD", label=HTML("Dilution effect &eta;"), min = 0, max = 1, value = 0)
+    }
+  })
+  observeEvent(input$etaGSD, { # update eta according to slider
+    if(input$dilutionCheck == FALSE) value$etaGSD <- input$etaGSD
+  })
+  observeEvent(input$dilutionCheck, { # update eta if box is ticked again
+    if(input$dilutionCheck == TRUE) value$etaGSD <- 0
+  })
+  
+  output$psiSettings <- renderUI({ # show input for psi if box is unticked
+    if(input$psiCheck == FALSE) {
+      numericInput("psiGSD", label=HTML("Variance inflation &psi;"), min = 0.1, max = 5, value = 1, step = 0.1)
+    }
+  })
+  observeEvent(input$psiGSD, { # update psi according to input
+    if(input$psiCheck == FALSE) value$psiGSD <- input$psiGSD
+  })
+  observeEvent(input$psiCheck, { # update psi if box is ticked again
+    if(input$psiCheck == TRUE) value$psiGSD <- 1
+  })
+
+  output$power_table.gsd <- renderTable({ # GSD Table in Tab: Power Information
+      # get critical valus for GSD from package rpact
+      crit = getDesignGroupSequential(
+        kMax = 2,
+        typeOfDesign = input$designSelect, 
+        informationRates = c(input$tauGSD/100, 1),
+        alpha = input$alphaGSD, 
+        sided = 1)$criticalValues
+      # calculate means for first stage and final stage test statistics
+      mu.t0 = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100)) * sqrt(input$tauGSD/100)
+      mu.t =  (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100)) * (input$tauGSD/100+(1-input$tauGSD/100)*(1-value$etaGSD))/sqrt(input$tauGSD/100 + (1-input$tauGSD/100)*value$psiGSD)
+      # calculate variance matrix for the test statistics
+      SIG = matrix(c(1, 
+                     sqrt(input$tauGSD/100*1/(input$tauGSD/100 + (1-input$tauGSD/100)*value$psiGSD)), 
+                     sqrt(input$tauGSD/100*1/(input$tauGSD/100 + (1-input$tauGSD/100)*value$psiGSD)), 
+                     1), ncol=2)
+      # calculate power for fixed design and GSD (first stage and final stage)
+      power.fix = 1-pnorm(qnorm(1-input$alphaGSD), mean = mu.t0 , sd=1)
+      power.gsd.1 = 1-pnorm(crit[1], mean = mu.t0, sd=1)
+      power.gsd.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
+                              mean = c(mu.t0 , mu.t), 
+                              sigma = SIG)[1]
+      # create output table
+      data.gsd = matrix(c(power.fix, power.gsd.1, power.gsd.2)*100, ncol=1)
+      data.gsd[, 1] <- sprintf("%.1f", data.gsd[, 1])
+      data.gsd <- data.frame(c("Available", "GSD Stage 1", "GSD Stage 2"), data.gsd)
+      colnames(data.gsd) <- c("", "Power (%)")
+    return(data.gsd)
+  }, striped = T, hover = T, bordered = T, rownames = FALSE, colnames = TRUE, digits = 4)
+  #********************************************************************************************************
+  # GSD end
+  #********************************************************************************************************
+  
 }
