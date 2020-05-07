@@ -87,6 +87,73 @@ navbarPage("Power Implications for Reduced Sample Size",
                       )
                     )
            ),
+           
+           # ***************************************************
+           # GSD start
+           # ***************************************************
+           tabPanel("GSD",
+                    sidebarLayout(
+                      sidebarPanel(
+                        selectInput(inputId = "designSelect", label="Type of GSD", 
+                                    choices = c("Pocock" = "P", 
+                                                "O'Brien-Fleming"="OF"), 
+                                    selected="Pocock"),
+                        numericInput(
+                          inputId = "alphaGSD",
+                          label = "One-sided significance level",
+                          value = 0.025,
+                          min = 0.001,
+                          step = 0.001
+                        ),
+                        numericInput(
+                          inputId = "powerGSD",
+                          label = "Power (%)",
+                          value = 90,
+                          min = 1,
+                          step = 0.1
+                        ),
+                        bsTooltip("powerGSD",
+                                  "Power for statistical significance to detect a hypothesized design effect (>0)",
+                                  "right",
+                                  trigger = "hover", options = list(container = "body")
+                        ),
+                        br(),
+                        sliderInput(
+                          inputId = "tauGSD",
+                          label = "Proportion (%) of data available",
+                          min = 10, max = 100, value = 50, step = 1
+                        ),
+                        bsTooltip("fracGSD",
+                                  "The fraction of patients with endpoint assessment",
+                                  "right",
+                                  trigger = "hover", options = list(container = "body")
+                        ),
+                        helpText("Note: This may depend on the data structure. For example, for time-to-event outcomes this proportion refers to the number of patients with endpoints, relative to the expectation in the original design."
+                        ),
+                        checkboxInput(inputId = "dilutionCheck",
+                                      label = strong("No dilution effect for second stage"),
+                                      value = TRUE),
+                        uiOutput("dilutionSettings"),
+                        checkboxInput(inputId = "psiCheck",
+                                      label = strong("Equal variances for second stage"),
+                                      value = TRUE),
+                        uiOutput("psiSettings"),
+                      ),
+                      mainPanel(
+                        tabsetPanel(
+                          tabPanel("Achieved Power",
+                                   br(),
+                                   br(),
+                                   tableOutput("power_table.gsd")
+                          )
+                          
+                        )
+                        )                    
+                    )
+           ),
+           # ***************************************************
+           # GSD end *******************************************
+           # ***************************************************
            tabPanel("Help",
                     fluidPage(
                       fluidRow(column (7, withMathJax(includeMarkdown("help.md"))))
