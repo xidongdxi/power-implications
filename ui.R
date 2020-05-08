@@ -89,7 +89,7 @@ navbarPage("Power Implications for Reduced Sample Size",
            ),
            
            # ***************************************************
-           # GSD start
+           # Group Sequential Designs (start)
            # ***************************************************
            tabPanel("GSD",
                     sidebarLayout(
@@ -152,7 +152,7 @@ navbarPage("Power Implications for Reduced Sample Size",
                     )
            ),
            # ***************************************************
-           # GSD end *******************************************
+           # Group Sequential Design (end)
            # ***************************************************
            tabPanel("Help",
                     fluidPage(
