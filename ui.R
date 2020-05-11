@@ -98,6 +98,11 @@ navbarPage("Power Implications for Reduced Sample Size",
                                     choices = c("Pocock" = "P", 
                                                 "O'Brien-Fleming"="OF"), 
                                     selected="Pocock"),
+                        bsTooltip("designSelect",
+                                  "Implement an interim analysis with data available and a final analysis when all data are collected",
+                                  "right",
+                                  trigger = "hover", options = list(container = "body")
+                        ),
                         numericInput(
                           inputId = "alphaGSD",
                           label = "One-sided significance level",
@@ -113,7 +118,7 @@ navbarPage("Power Implications for Reduced Sample Size",
                           step = 0.1
                         ),
                         bsTooltip("powerGSD",
-                                  "Power for statistical significance to detect a hypothesized design effect (>0)",
+                                  "Power for statistical significance to detect a hypothesized design effect (>0) using the sample size for the fixed design.",
                                   "right",
                                   trigger = "hover", options = list(container = "body")
                         ),
@@ -128,15 +133,24 @@ navbarPage("Power Implications for Reduced Sample Size",
                                   "right",
                                   trigger = "hover", options = list(container = "body")
                         ),
-                        helpText("Note: This may depend on the data structure. For example, for time-to-event outcomes this proportion refers to the number of patients with endpoints, relative to the expectation in the original design."
-                        ),
+                        #helpText("Note: This may depend on the data structure. For example, for time-to-event outcomes this proportion refers to the number of patients with endpoints, relative to the expectation in the original design."),
                         checkboxInput(inputId = "dilutionCheck",
                                       label = strong("No dilution effect for second stage"),
                                       value = TRUE),
+                        bsTooltip("dilutionCheck",
+                                  HTML("Loss in assumed treatment effect for the second stage. For example, &eta; = 0.25 means that the assumed treatment effect for the second stage is only 75% of the assumed treatment effect of the first stage."),
+                                  "right",
+                                  trigger = "hover", options = list(container = "body")
+                        ),
                         uiOutput("dilutionSettings"),
                         checkboxInput(inputId = "psiCheck",
                                       label = strong("Equal variances for second stage"),
                                       value = TRUE),
+                        bsTooltip("psiCheck",
+                                  HTML("Inflation factor for the variance. For example, a value of &psi;=2 means that the variance for the second stage is twice the variance of the first stage."),
+                                  "right",
+                                  trigger = "hover", options = list(container = "body")
+                        ),
                         uiOutput("psiSettings"),
                       ),
                       mainPanel(
