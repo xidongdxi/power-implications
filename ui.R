@@ -94,15 +94,6 @@ navbarPage("Power Implications for Reduced Sample Size",
            tabPanel("GSD",
                     sidebarLayout(
                       sidebarPanel(
-                        selectInput(inputId = "designSelect", label="Type of GSD", 
-                                    choices = c("Pocock" = "P", 
-                                                "O'Brien-Fleming"="OF"), 
-                                    selected="Pocock"),
-                        bsTooltip("designSelect",
-                                  "Implement an interim analysis with data available and a final analysis when all data are collected",
-                                  "right",
-                                  trigger = "hover", options = list(container = "body")
-                        ),
                         numericInput(
                           inputId = "alphaGSD",
                           label = "One-sided significance level",
@@ -133,6 +124,15 @@ navbarPage("Power Implications for Reduced Sample Size",
                                   "right",
                                   trigger = "hover", options = list(container = "body")
                         ),
+                        selectInput(inputId = "designSelect", label="Type of GSD", 
+                                    choices = c("Pocock" = "P", 
+                                                "O'Brien-Fleming"="OF"), 
+                                    selected="Pocock"),
+                        bsTooltip("designSelect",
+                                  "Implement an interim analysis with data available and a final analysis when all data are collected",
+                                  "right",
+                                  trigger = "hover", options = list(container = "body")
+                        ),
                         #helpText("Note: This may depend on the data structure. For example, for time-to-event outcomes this proportion refers to the number of patients with endpoints, relative to the expectation in the original design."),
                         checkboxInput(inputId = "dilutionCheck",
                                       label = strong("No dilution effect for second stage"),
@@ -158,7 +158,9 @@ navbarPage("Power Implications for Reduced Sample Size",
                           tabPanel("Achieved Power",
                                    br(),
                                    br(),
-                                   tableOutput("power_table.gsd")
+                                   #tableOutput("power_table.gsd"),
+                                   DT::dataTableOutput('power_tableGSD'),
+                                   plotOutput('power_plotGSD')
                           )
                           
                         )
