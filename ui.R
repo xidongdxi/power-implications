@@ -160,7 +160,10 @@ navbarPage("Power Implications for Reduced Sample Size",
                                    br(),
                                    #tableOutput("power_table.gsd"),
                                    DT::dataTableOutput('power_tableGSD'),
-                                   plotOutput('power_plotGSD')
+                                   br(),
+                                   plotlyOutput('power_plotlyGSD'),
+                                   plotOutput('power_plotGSD'),
+                                   br()
                           )
                           
                         )

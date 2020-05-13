@@ -1,6 +1,6 @@
 
 function(input, output, session) {
-    power20 <- reactive({ # Function to get sample size and power
+  power20 <- reactive({ # Function to get sample size and power
     rand <- 1
     delta <- 1
     sd <- 10
@@ -103,7 +103,7 @@ function(input, output, session) {
       )
     ggplotly(p)
   })
-    
+  
   #********************************************************************************************************
   # GSD start
   #********************************************************************************************************
@@ -133,41 +133,11 @@ function(input, output, session) {
   observeEvent(input$psiCheck, { # update psi if box is ticked again
     if(input$psiCheck == TRUE) value$psiGSD <- 1
   })
-
-  output$power_table.gsd <- renderTable({ # GSD Table in Tab: Power Information
-      # get critical valus for GSD from package rpact
-      crit = getDesignGroupSequential(
-        kMax = 2,
-        typeOfDesign = input$designSelect, 
-        informationRates = c(input$tauGSD/100, 1),
-        alpha = input$alphaGSD, 
-        sided = 1)$criticalValues
-      # calculate means for first stage and final stage test statistics
-      mu.t0 = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100)) * sqrt(input$tauGSD/100)
-      mu.t =  (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100)) * (input$tauGSD/100+(1-input$tauGSD/100)*(1-value$etaGSD))/sqrt(input$tauGSD/100 + (1-input$tauGSD/100)*value$psiGSD)
-      # calculate variance matrix for the test statistics
-      SIG = matrix(c(1, 
-                     sqrt(input$tauGSD/100*1/(input$tauGSD/100 + (1-input$tauGSD/100)*value$psiGSD)), 
-                     sqrt(input$tauGSD/100*1/(input$tauGSD/100 + (1-input$tauGSD/100)*value$psiGSD)), 
-                     1), ncol=2)
-      # calculate power for fixed design and GSD (first stage and final stage)
-      power.fix = 1-pnorm(qnorm(1-input$alphaGSD), mean = mu.t0 , sd=1)
-      power.gsd.1 = 1-pnorm(crit[1], mean = mu.t0, sd=1)
-      power.gsd.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-                              mean = c(mu.t0 , mu.t), 
-                              sigma = SIG)[1]
-      # create output table
-      data.gsd = matrix(c(power.fix, power.gsd.1, power.gsd.2)*100, ncol=1)
-      data.gsd[, 1] <- sprintf("%.1f", data.gsd[, 1])
-      data.gsd <- data.frame(c("Available", "GSD Stage 1", "GSD Stage 2"), data.gsd)
-      colnames(data.gsd) <- c("", "Power (%)")
-    return(data.gsd)
-  }, striped = T, hover = T, bordered = T, rownames = FALSE, colnames = TRUE, digits = 4)
   
-  
-  powerGSD <- reactive({
+ 
+  powerGSD <- reactive({ # Create table for the resulting values of the power (independent of input value for tau)
     # values for tau
-    TAU = unique(sort(c(input$tauGSD, c(seq(0.10, 0.80, 0.10), seq(0.85, 0.95, 0.05), 0.99)*100)))
+    TAU = c(seq(0.05, 0.95, 0.05), 0.99)*100
     # matrix for results
     data.gsd = matrix(NA, ncol=4, nrow=length(TAU))
     for(tauGSD in TAU) {
@@ -197,30 +167,70 @@ function(input, output, session) {
     return(data.gsd)
   })
   
-  output$power_plotGSD <- renderPlot({ # GSD Plot in Tab: Power Information
-    data.gsd = powerGSD()
-    plot(0, 0, type="n", xlim=c(0,100), ylim=c(0,100))
-    lines(data.gsd[,1], data.gsd[,2], lwd=2, lty=3)
-    lines(data.gsd[,1], data.gsd[,3], lwd=2, lty=2)
-    lines(data.gsd[,1], data.gsd[,4], lwd=2, lty=1)
-    points(input$tauGSD, data.gsd[which(data.gsd[,1]==input$tauGSD),2], pch=16, cex=1.5)
-    points(input$tauGSD, data.gsd[which(data.gsd[,1]==input$tauGSD),3], pch=16, cex=1.5)
-    points(input$tauGSD, data.gsd[which(data.gsd[,1]==input$tauGSD),4], pch=16, cex=1.5)
-    text(input$tauGSD, data.gsd[which(data.gsd[,1]==input$tauGSD),2], label=round(data.gsd[which(data.gsd[,1]==input$tauGSD),2],2), pos=3)
-    text(input$tauGSD, data.gsd[which(data.gsd[,1]==input$tauGSD),3], label=round(data.gsd[which(data.gsd[,1]==input$tauGSD),3],2), pos=1)
-    text(input$tauGSD, data.gsd[which(data.gsd[,1]==input$tauGSD),4], label=round(data.gsd[which(data.gsd[,1]==input$tauGSD),4],2), pos=3)
-    legend("bottomright", legend=c("Fixed", "GSD (Stage 1)", "GSD (overall)"), lty=c(3,2,1), lwd=2, inset=0.05)
+  powerGSDinput <- reactive({ # Add row for input value of tau
+    # values for tau
+    TAU = unique(sort(c(input$tauGSD, c(seq(0.05, 0.95, 0.05), 0.99)*100)))
+    # matrix for results
+    tauGSD = input$tauGSD
+    # get critical valus for GSD from package rpact
+    crit = getDesignGroupSequential(
+      kMax = 2,
+      typeOfDesign = input$designSelect, 
+      informationRates = c(tauGSD/100, 1),
+      alpha = input$alphaGSD, 
+      sided = 1)$criticalValues
+    # calculate means for first stage and final stage test statistics
+    mu.t0 = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100)) * sqrt(tauGSD/100)
+    mu.t =  (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100)) * (tauGSD/100+(1-tauGSD/100)*(1-value$etaGSD))/sqrt(tauGSD/100 + (1-tauGSD/100)*value$psiGSD)
+    # calculate variance matrix for the test statistics
+    SIG = matrix(c(1, 
+                   sqrt(tauGSD/100*1/(tauGSD/100 + (1-tauGSD/100)*value$psiGSD)), 
+                   sqrt(tauGSD/100*1/(tauGSD/100 + (1-tauGSD/100)*value$psiGSD)), 
+                   1), ncol=2)
+    # calculate power for fixed design and GSD (first stage and final stage)
+    power.fix = 1-pnorm(qnorm(1-input$alphaGSD), mean = mu.t0 , sd=1)
+    power.gsd.1 = 1-pnorm(crit[1], mean = mu.t0, sd=1)
+    power.gsd.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
+                            mean = c(mu.t0 , mu.t), 
+                            sigma = SIG)[1]
+    data.gsd = rbind(powerGSD(),
+                     c(tauGSD, power.fix*100, power.gsd.1*100, power.gsd.2*100))
+    data.gsd = data.gsd[order(data.gsd[,1]),]
+    data.gsd = data.gsd[!duplicated(data.gsd[,1]),]
+    return(data.gsd)
   })
 
-  # The following code works but produces a warning message I couldn't resolve
-  # Maybe someone else has an idea?
-  output$power_tableGSD <- DT::renderDataTable({ # GSD Table in Tab: Power Information
+  output$power_plotlyGSD <- renderPlotly({ # GSD Plot in Tab: Power Information
+    data.gsd = powerGSDinput()
+    data_plot <- data.frame(Proportion=rep(data.gsd[, 1], 3), Power=as.vector(data.gsd[, 2:4]),
+                            Type=rep(c("Available", "GSD (stage 1)", "GSD (overall)"), each=nrow(data.gsd)))
+    data_plot$Type <- factor(data_plot$Type, levels=c("Available", "GSD (stage 1)", "GSD (overall)"))
+    data_plot$Power <- round(data_plot$Power,2)
+    p <- ggplot(data_plot, aes(x = Proportion, y = Power, color = Type)) +
+      geom_line(linetype = 1, size = 1) +
+      xlab("Proportion (%) of data available") +
+      ylab("Power (%)") +
+      xlim(0,100) +
+      ylim(0,100) +
+      theme_bw() +
+      scale_color_manual(values = c("Available" = "#0460A9", "GSD (stage 1)" = "#EC9A1E", "GSD (overall)" = "#8D1F1B")) +
+      theme(text = element_text(size = 12, face = "bold"),
+            plot.title = element_text(colour = "black", size = 12, face = "bold", hjust = 0),
+            legend.title = element_blank(),
+            plot.margin = unit(c(0.3, 0.3, 0.3, 0.3), "cm"),
+            legend.text = element_text(colour = "black", size = 12, face = "bold")
+      )
+    ggplotly(p)
     
-    data.gsd = powerGSD()
-    data.gsd[, 2:4] <- sprintf("%.2f",  powerGSD()[, 2:4])
-    data.gsd = data.frame(data.gsd)
-    colnames(data.gsd) <- c("tau", "Fixed", "GSD Stage 1", "GSD overall")
-    datatable(data.gsd, options = list(dom = 't')) %>% formatStyle(
+  })
+  
+  output$power_tableGSD <- DT::renderDataTable({ # GSD Table in Tab: Power Information
+    data.gsd = powerGSDinput()
+    data.table = data.gsd[which(round(data.gsd[,1],0)%%10==0 | data.gsd[,1]==input$tauGSD | (data.gsd[,1]>=79 & round(data.gsd[,1],1)%%5==0)),]
+    data.table[, 2:4] <- sprintf("%.2f",  data.table[, 2:4])
+    data.table = data.frame(data.table)
+    colnames(data.table) <- c("tau", "Available", "GSD Stage 1", "GSD overall")
+    datatable(data.table, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
       'tau',
       target = 'row',
       backgroundColor = styleEqual(input$tauGSD, 'lightblue')
