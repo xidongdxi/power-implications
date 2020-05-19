@@ -1,4 +1,3 @@
-
 function(input, output, session) {
   power20 <- reactive({ # Function to get sample size and power
     rand <- 1
@@ -134,7 +133,10 @@ function(input, output, session) {
     if(input$psiCheck == TRUE) value$psiGSD <- 1
   })
   
- 
+  #********************************************************************************************************
+  # calculations for power
+  #********************************************************************************************************
+  
   powerGSD <- reactive({ # Create table for the resulting values of the power (independent of input value for tau)
     # values for tau
     TAU = c(seq(0.05, 0.95, 0.05), 0.99)*100
@@ -169,7 +171,7 @@ function(input, output, session) {
   
   powerGSDinput <- reactive({ # Add row for input value of tau
     # values for tau
-    TAU = unique(sort(c(input$tauGSD, c(seq(0.05, 0.95, 0.05), 0.99)*100)))
+    #TAU = unique(sort(c(input$tauGSD, c(seq(0.05, 0.95, 0.05), 0.99)*100)))
     # matrix for results
     tauGSD = input$tauGSD
     # get critical valus for GSD from package rpact
@@ -199,7 +201,7 @@ function(input, output, session) {
     data.gsd = data.gsd[!duplicated(data.gsd[,1]),]
     return(data.gsd)
   })
-
+  
   output$power_plotlyGSD <- renderPlotly({ # GSD Plot in Tab: Power Information
     data.gsd = powerGSDinput()
     data_plot <- data.frame(Proportion=rep(data.gsd[, 1], 3), Power=as.vector(data.gsd[, 2:4]),
@@ -227,6 +229,7 @@ function(input, output, session) {
   output$power_tableGSD <- DT::renderDataTable({ # GSD Table in Tab: Power Information
     data.gsd = powerGSDinput()
     data.table = data.gsd[which(round(data.gsd[,1],0)%%10==0 | data.gsd[,1]==input$tauGSD | (data.gsd[,1]>=79 & round(data.gsd[,1],1)%%5==0)),]
+    data.table = data.table[!duplicated(round(data.table[,1])),]
     data.table[, 2:4] <- sprintf("%.2f",  data.table[, 2:4])
     data.table = data.frame(data.table)
     colnames(data.table) <- c("tau", "Available", "GSD Stage 1", "GSD overall")
@@ -237,6 +240,122 @@ function(input, output, session) {
     )
   }, server = TRUE)
   
+  #********************************************************************************************************
+  # calculations for adjusted sample size
+  #********************************************************************************************************
+  
+  Nfix <- reactive({
+    return((qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * 1/input$deltaGSD^2 * (input$r+1)^2/input$r)
+  })
+  
+  output$samplesize <- renderUI({
+    N = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * 1/input$deltaGSD^2 * (input$r+1)^2/input$r
+    sprintf(" N = %.0f", ceiling(N))
+  })
+
+  adjustN <- reactive({ # Create table for the resulting sample sizes (independent of input value for tau/psi)
+    # values for tau
+    TAU = seq(0.10, 0.90, 0.10)*100
+    adjust = matrix(NA, ncol=4, nrow=length(TAU))
+    for(tau in TAU) {
+      # for fixed design
+      if(tau/100*value$etaGSD^2-1+value$psiGSD==0) xi = tau/100 *(1-value$etaGSD)^2/(1-tau/100 * value$etaGSD * (2-value$etaGSD))
+      else if(tau/100*value$etaGSD^2-1+value$psiGSD!=0) xi = (value$psiGSD - 2 * tau/100 * value$etaGSD * (1-value$etaGSD) - sqrt(value$psiGSD^2 - 4*tau/100 * (1-value$etaGSD) * (value$etaGSD + value$psiGSD - 1)))/(2*(value$psiGSD - 1 + tau/100 * value$etaGSD^2))
+      # for GSD
+      n0 = Nfix()*tau/100
+      prec <- 1
+      nu <- 0
+      no <- 10000
+      while(prec > 0.1){
+        n1.tilde.gsd <- (nu + no)/2
+        crit = getDesignGroupSequential(
+          kMax = 2,
+          typeOfDesign = input$designSelect, 
+          informationRates = c(n0/(n0+n1.tilde.gsd), 1),
+          alpha = input$alphaGSD, 
+          sided = 1)$criticalValues
+        power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD, sd=1)
+        power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
+                            mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD, 
+                                     sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD), 
+                            sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
+        ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
+        prec <- no - nu
+      }
+      adjust[which(tau==TAU), 1:4] = c(tau, ceiling(Nfix()*tau/100), ceiling(Nfix()*tau/100*(1-xi)/xi), ceiling(n1.tilde.gsd))
+    }
+    return(adjust)
+  })
+  
+  adjustNinput <- reactive({ # Add row for input value of tau
+    if(input$tauGSD/100*value$etaGSD^2-1+value$psiGSD==0) xi = input$tauGSD/100 *(1-value$etaGSD)^2/(1-input$tauGSD/100 * value$etaGSD * (2-value$etaGSD))
+    else if(input$tauGSD/100*value$etaGSD^2-1+value$psiGSD!=0) xi = (value$psiGSD - 2 * input$tauGSD/100 * value$etaGSD * (1-value$etaGSD) - sqrt(value$psiGSD^2 - 4*input$tauGSD/100 * (1-value$etaGSD) * (value$etaGSD + value$psiGSD - 1)))/(2*(value$psiGSD - 1 + input$tauGSD/100 * value$etaGSD^2))
+    n0 = Nfix()*input$tauGSD/100
+    prec <- 1
+    nu <- 0
+    no <- 10000
+    while(prec > 0.1){
+      n1.tilde.gsd <- (nu + no)/2
+      crit = getDesignGroupSequential(
+        kMax = 2,
+        typeOfDesign = input$designSelect, 
+        informationRates = c(n0/(n0+n1.tilde.gsd), 1),
+        alpha = input$alphaGSD, 
+        sided = 1)$criticalValues
+      power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD, sd=1)
+      power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
+                          mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD, 
+                                   sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD), 
+                          sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
+      ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
+      prec <- no - nu
+    }
+    adjust = rbind(adjustN(),
+                   c(input$tauGSD, ceiling(Nfix()*input$tauGSD/100), Nfix()*input$tauGSD/100*(1-xi)/xi, n1.tilde.gsd)
+                   )
+    adjust = adjust[order(adjust[,1]),]
+    adjust = adjust[!duplicated(adjust[,1]),]
+    return(adjust)
+  })
+  
+  # output$power_plotlyGSD <- renderPlotly({ # GSD Plot in Tab: Power Information
+  #   data.gsd = powerGSDinput()
+  #   data_plot <- data.frame(Proportion=rep(data.gsd[, 1], 3), Power=as.vector(data.gsd[, 2:4]),
+  #                           Type=rep(c("Available", "GSD (stage 1)", "GSD (overall)"), each=nrow(data.gsd)))
+  #   data_plot$Type <- factor(data_plot$Type, levels=c("Available", "GSD (stage 1)", "GSD (overall)"))
+  #   data_plot$Power <- round(data_plot$Power,2)
+  #   p <- ggplot(data_plot, aes(x = Proportion, y = Power, color = Type)) +
+  #     geom_line(linetype = 1, size = 1) +
+  #     xlab("Proportion (%) of data available") +
+  #     ylab("Power (%)") +
+  #     xlim(0,100) +
+  #     ylim(0,100) +
+  #     theme_bw() +
+  #     scale_color_manual(values = c("Available" = "#0460A9", "GSD (stage 1)" = "#EC9A1E", "GSD (overall)" = "#8D1F1B")) +
+  #     theme(text = element_text(size = 12, face = "bold"),
+  #           plot.title = element_text(colour = "black", size = 12, face = "bold", hjust = 0),
+  #           legend.title = element_blank(),
+  #           plot.margin = unit(c(0.3, 0.3, 0.3, 0.3), "cm"),
+  #           legend.text = element_text(colour = "black", size = 12, face = "bold")
+  #     )
+  #   ggplotly(p)
+  #   
+  # })
+  # 
+  output$adjust_tableGSD <- DT::renderDataTable({ # GSD Table in Tab: Power Information
+    adjust.gsd = adjustNinput()
+    adjust.table = adjust.gsd[which(round(adjust.gsd[,1],0)%%10==0 | adjust.gsd[,1]==input$tauGSD ),]
+    adjust.table = adjust.table[!duplicated(round(adjust.table[,1])),]
+    adjust.table[, 2:4] <- sprintf("%.0f",  adjust.table[, 2:4])
+    adjust.table = data.frame(adjust.table)
+    colnames(adjust.table) <- c("tau", "n0", "n1 (fix)", "n1 (GSD)")
+    datatable(adjust.table, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
+      'tau',
+      target = 'row',
+      backgroundColor = styleEqual(input$tauGSD, 'lightblue')
+    )
+  }, server = TRUE)
+ 
   
   #********************************************************************************************************
   # GSD end

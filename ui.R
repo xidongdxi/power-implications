@@ -1,4 +1,3 @@
-
 navbarPage("Power Implications for Reduced Sample Size",
            theme = shinytheme("cerulean"),
            windowTitle = "Power Implications",
@@ -91,7 +90,7 @@ navbarPage("Power Implications for Reduced Sample Size",
            # ***************************************************
            # Group Sequential Designs (start)
            # ***************************************************
-           tabPanel("GSD",
+           tabPanel("Group Sequential Design",
                     sidebarLayout(
                       sidebarPanel(
                         numericInput(
@@ -158,18 +157,54 @@ navbarPage("Power Implications for Reduced Sample Size",
                           tabPanel("Achieved Power",
                                    br(),
                                    br(),
-                                   #tableOutput("power_table.gsd"),
-                                   DT::dataTableOutput('power_tableGSD'),
-                                   br(),
+                                   #DT::dataTableOutput('power_tableGSD'),
+                                   #br(),
                                    plotlyOutput('power_plotlyGSD'),
-                                   plotOutput('power_plotGSD'),
+                                   checkboxInput("checkTableGSD", "Show results in table format", value = FALSE),
+                                   conditionalPanel(
+                                     condition = "input.checkTableGSD == true",
+                                     DT::dataTableOutput('power_tableGSD')
+                                   ),
+                                   bsTooltip("checkTableGSD",
+                                             HTML("Show results for the achieved power as a table"),
+                                             "right",
+                                             trigger = "hover", options = list(container = "body")
+                                   ),
                                    br()
+                          ),
+                          tabPanel("Sample Size Adjustment",
+                                   br(),
+                                   div(style="display:inline-block;vertical-align:top; width: 250px;", 
+                                       numericInput("deltaGSD", label = HTML("Standardized effect &delta;/&sigma;"), min = 0, max = 5, value = 0.5, step = 0.01)),
+                                   div(style="display:inline-block;vertical-align:top; width: 250px;", 
+                                       numericInput("r", label = HTML("Randomization ratio 1:r (plc:trt)"), min = 0, max = 5, value = 1, step = 0.01)),
+                                   br(),
+                                   uiOutput('samplesize'),
+                                   DT::dataTableOutput('adjust_tableGSD')
+                                   #br(),
+                                   #br(),
+                                   #DT::dataTableOutput('power_tableGSD'),
+                                   #br(),
+                                   #plotlyOutput('power_plotlyN'),
+                                   #checkboxInput("checkTableN", "Show results in table format", value = FALSE),
+                                   #conditionalPanel(
+                                   #  condition = "input.checkTableN == true",
+                                   #  DT::dataTableOutput('power_tableN')
+                                   #),
+                                   #bsTooltip("checkTableN",
+                                   #          HTML("Show results for adjusted sample size for the second stage"),
+                                   #          "right",
+                                   #          trigger = "hover", options = list(container = "body")
+                                   #),
+                                   #br()
+                                   
                           )
-                          
                         )
-                        )                    
+                        
+                      )                    
                     )
            ),
+           
            # ***************************************************
            # Group Sequential Design (end)
            # ***************************************************
