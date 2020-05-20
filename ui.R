@@ -157,8 +157,6 @@ navbarPage("Power Implications for Reduced Sample Size",
                           tabPanel("Achieved Power",
                                    br(),
                                    br(),
-                                   #DT::dataTableOutput('power_tableGSD'),
-                                   #br(),
                                    plotlyOutput('power_plotlyGSD'),
                                    checkboxInput("checkTableGSD", "Show results in table format", value = FALSE),
                                    conditionalPanel(
@@ -174,29 +172,24 @@ navbarPage("Power Implications for Reduced Sample Size",
                           ),
                           tabPanel("Sample Size Adjustment",
                                    br(),
-                                   div(style="display:inline-block;vertical-align:top; width: 250px;", 
-                                       numericInput("deltaGSD", label = HTML("Standardized effect &delta;/&sigma;"), min = 0, max = 5, value = 0.5, step = 0.01)),
-                                   div(style="display:inline-block;vertical-align:top; width: 250px;", 
+                                   h5("The trial was originally planned for the following parameters: "),
+                                   div(style="display:inline-block;vertical-align:top; width: 220px;", 
+                                       numericInput("deltaGSD", label = HTML("Treatment effect &delta;"), min = 0, max = 5, value = 0.5, step = 0.01)),
+                                   div(style="display:inline-block;vertical-align:top; width: 220px;", 
+                                       numericInput("sigmaGSD", label = HTML("Standard deviation &sigma;"), min = 0, max = 5, value = 1, step = 0.01)),
+                                   div(style="display:inline-block;vertical-align:top; width: 220px;", 
                                        numericInput("r", label = HTML("Randomization ratio 1:r (plc:trt)"), min = 0, max = 5, value = 1, step = 0.01)),
                                    br(),
                                    uiOutput('samplesize'),
-                                   DT::dataTableOutput('adjust_tableGSD')
-                                   #br(),
-                                   #br(),
-                                   #DT::dataTableOutput('power_tableGSD'),
-                                   #br(),
-                                   #plotlyOutput('power_plotlyN'),
-                                   #checkboxInput("checkTableN", "Show results in table format", value = FALSE),
+                                   br(),
+                                   uiOutput('parameters'),
+                                   DT::dataTableOutput('adjust_tableGSDeta'),
+                                   checkboxInput("checkTableEta", HTML("Show results for range of dilution effect &eta; in table format"), value = FALSE),
+                                   
                                    #conditionalPanel(
-                                   #  condition = "input.checkTableN == true",
-                                   #  DT::dataTableOutput('power_tableN')
+                                   #  condition = "input.checkTableEta == true",
+                                   #  DT::dataTableOutput('adjust_tableGSDeta')
                                    #),
-                                   #bsTooltip("checkTableN",
-                                   #          HTML("Show results for adjusted sample size for the second stage"),
-                                   #          "right",
-                                   #          trigger = "hover", options = list(container = "body")
-                                   #),
-                                   #br()
                                    
                           )
                         )
