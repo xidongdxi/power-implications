@@ -172,7 +172,8 @@ navbarPage("Power Implications for Reduced Sample Size",
                           ),
                           tabPanel("Sample Size Adjustment",
                                    br(),
-                                   h5("The trial was originally planned for the following parameters: "),
+                                   uiOutput('textadjust'),
+                                   br(),
                                    div(style="display:inline-block;vertical-align:top; width: 220px;", 
                                        numericInput("deltaGSD", label = HTML("Treatment effect &delta;"), min = 0, max = 5, value = 0.5, step = 0.01)),
                                    div(style="display:inline-block;vertical-align:top; width: 220px;", 
@@ -185,12 +186,7 @@ navbarPage("Power Implications for Reduced Sample Size",
                                    uiOutput('parameters'),
                                    DT::dataTableOutput('adjust_tableGSDeta'),
                                    checkboxInput("checkTableEta", HTML("Show results for range of dilution effect &eta; in table format"), value = FALSE),
-                                   
-                                   #conditionalPanel(
-                                   #  condition = "input.checkTableEta == true",
-                                   #  DT::dataTableOutput('adjust_tableGSDeta')
-                                   #),
-                                   
+                                   #plotlyOutput('power_plotlyETA'), 
                           )
                         )
                         

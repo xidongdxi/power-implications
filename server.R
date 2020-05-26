@@ -248,13 +248,17 @@ function(input, output, session) {
     return((qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * input$sigmaGSD^2/input$deltaGSD^2 * (input$r+1)^2/input$r)
   })
   
+  output$textadjust <- renderUI({
+    withMathJax("The trial was originally planned as an one-stage design with a fixed sample size for the following parameters:")
+  })
+  
   output$samplesize <- renderUI({
     N = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * input$sigmaGSD^2/input$deltaGSD^2 * (input$r+1)^2/input$r
-    sprintf("The originally planned sample size N was N = %.0f.", ceiling(N))
+    withMathJax(sprintf("The originally planned fixed sample size was \\(N =  %.0f\\).", ceiling(N)))
   })
   
   output$parameters <- renderUI({
-    sprintf(HTML("Assuming a dilution effect of eta = %.2f and a variance in-/deflation of psi = %.2f, the adjusted sample sizes are"), value$etaGSD, value$psiGSD)
+    withMathJax(sprintf(HTML("Assuming a dilution effect of \\(\\eta = %.2f\\)  and a variance in-/deflation of \\(\\psi = %.2f\\), the adjusted sample sizes are"), value$etaGSD, value$psiGSD))
   })
   
   # adjustN <- reactive({ # Create table for the resulting sample sizes (independent of input value for tau/psi)
@@ -433,7 +437,6 @@ function(input, output, session) {
     if(input$checkTableEta == TRUE) {
       adjust.table = rbind(adjustNeta(), adjustNinputEta())
       adjust.table = adjust.table[order(adjust.table[,1]),]
-      #adjust.table = adjust.table[!duplicated(adjust.table[,1]),]
       adjust.table = adjust.table[!duplicated(round(adjust.table[,1],3)),]
     }
     if(input$checkTableEta == FALSE) {
@@ -449,6 +452,37 @@ function(input, output, session) {
       backgroundColor = styleEqual(value$etaGSD, 'lightblue')
     )
   }, server = TRUE)
+  
+  
+  # output$power_plotlyETA <- renderPlotly({ # GSD Plot in Tab: Power Information
+  #   data.gsd = rbind(adjustNeta(), adjustNinputEta())
+  #   data.gsd = data.gsd[order(data.gsd[,1]),]
+  #   data.gsd = data.gsd[!duplicated(round(data.gsd[,1],3)),]
+  #   data.gsd = cbind(data.gsd, data.gsd[,2]+data.gsd[,3], data.gsd[,2]+data.gsd[,4])
+  # 
+  #   data_plot <- data.frame(Eta=rep(data.gsd[, 1], 5), SampleSize=as.vector(data.gsd[, 2:6]),
+  #                           Type=rep(c("n0", "n1 (fix)", "n1 (GSD)", "N (fix)", "N (GSD)"), each=nrow(data.gsd)))
+  #   data_plot$Type <- factor(data_plot$Type, levels=c("n0", "n1 (fix)", "n1 (GSD)", "N (fix)", "N (GSD)"))
+  #   data_plot$SampleSize <- round(data_plot$SampleSize,2)
+  #   p <- ggplot(data_plot, aes(x = Eta, y = SampleSize, color = Type)) +
+  #     geom_line(linetype = 1, size = 1) +
+  #     xlab("Eta") +
+  #     ylab("Sample Size") +
+  #     xlim(0,1) +
+  #     ylim(0,1000) +
+  #     theme_bw() +
+  #     scale_color_manual(values = c("n0" = "#0460A9", "n1 (fix)" = "#EC9A1E", "n1 (GSD)" = "#8D1F1B", "N (fix)" = "#bf7504", "N (GSD)" = "#690703")) +
+  #     theme(text = element_text(size = 12, face = "bold"),
+  #           plot.title = element_text(colour = "black", size = 12, face = "bold", hjust = 0),
+  #           legend.title = element_blank(),
+  #           plot.margin = unit(c(0.3, 0.3, 0.3, 0.3), "cm"),
+  #           legend.text = element_text(colour = "black", size = 12, face = "bold")
+  #     )
+  #   ggplotly(p)
+  # 
+  # })
+
+
   
   
   #********************************************************************************************************
