@@ -232,9 +232,9 @@ function(input, output, session) {
     data.table = data.table[!duplicated(round(data.table[,1])),]
     data.table[, 2:4] <- sprintf("%.2f",  data.table[, 2:4])
     data.table = data.frame(data.table)
-    colnames(data.table) <- c("tau", "Available", "GSD Stage 1", "GSD overall")
-    datatable(data.table, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
-      'tau',
+    colnames(data.table) <- c("Proportion (%)<br>of data available", "Power<br>based on available data", "Power<br>GSD Stage 1", "Power<br>GSD overall")
+    datatable(data.table, escape = FALSE, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
+      'Proportion (%)<br>of data available',
       target = 'row',
       backgroundColor = styleEqual(input$tauGSD, 'lightblue')
     )
@@ -245,7 +245,7 @@ function(input, output, session) {
   #********************************************************************************************************
   
   Nfix <- reactive({
-    return((qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * input$sigmaGSD^2/input$deltaGSD^2 * (input$r+1)^2/input$r)
+    return((qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * input$varGSD/input$deltaGSD^2 * (input$r+1)^2/input$r)
   })
   
   output$textadjust <- renderUI({
@@ -253,7 +253,7 @@ function(input, output, session) {
   })
   
   output$samplesize <- renderUI({
-    N = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * input$sigmaGSD^2/input$deltaGSD^2 * (input$r+1)^2/input$r
+    N = (qnorm(1-input$alphaGSD)+qnorm(input$powerGSD/100))^2 * input$varGSD/input$deltaGSD^2 * (input$r+1)^2/input$r
     withMathJax(sprintf("The originally planned fixed sample size was \\(N =  %.0f\\).", ceiling(N)))
   })
   
@@ -282,10 +282,10 @@ function(input, output, session) {
   #         informationRates = c(n0/(n0+n1.tilde.gsd), 1),
   #         alpha = input$alphaGSD, 
   #         sided = 1)$criticalValues
-  #       power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, sd=1)
+  #       power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
   #       power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-  #                           mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, 
-  #                                    sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$sigmaGSD^2), 
+  #                           mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, 
+  #                                    sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD), 
   #                           sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
   #       ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
   #       prec <- no - nu
@@ -310,10 +310,10 @@ function(input, output, session) {
   #       informationRates = c(n0/(n0+n1.tilde.gsd), 1),
   #       alpha = input$alphaGSD, 
   #       sided = 1)$criticalValues
-  #     power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, sd=1)
+  #     power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
   #     power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-  #                         mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, 
-  #                                  sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$sigmaGSD^2), 
+  #                         mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, 
+  #                                  sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD), 
   #                         sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
   #     ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
   #     prec <- no - nu
@@ -391,10 +391,10 @@ function(input, output, session) {
             informationRates = c(n0/(n0+n1.tilde.gsd), 1),
             alpha = input$alphaGSD, 
             sided = 1)$criticalValues
-          power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, sd=1)
+          power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
           power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-                              mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, 
-                                       sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-eta))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$sigmaGSD^2), 
+                              mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, 
+                                       sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-eta))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD), 
                               sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
           ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
           prec <- no - nu
@@ -422,10 +422,10 @@ function(input, output, session) {
         informationRates = c(n0/(n0+n1.tilde.gsd), 1),
         alpha = input$alphaGSD,
         sided = 1)$criticalValues
-      power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2, sd=1)
+      power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
       power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]),
-                          mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$sigmaGSD^2,
-                                   sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$sigmaGSD^2),
+                          mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD,
+                                   sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD),
                           sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
       ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
       prec <- no - nu
@@ -445,9 +445,10 @@ function(input, output, session) {
     adjust.table = cbind(adjust.table, adjust.table[,2]+adjust.table[,3], adjust.table[,2]+adjust.table[,4])
     adjust.table[, 2:6] <- sprintf("%.0f",  adjust.table[, 2:6])
     adjust.table = data.frame(adjust.table)
-    colnames(adjust.table) <- c("eta", "n0", "n1 (fix)", "n1 (GSD)", "N (fix)", "N (GSD)")
-    datatable(adjust.table, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
-      'eta',
+    colnames(adjust.table) <- c("dilution effect &eta;", "Available data", "Sample size<br>for second stage<br>(fixed design)", "Sample size<br>for second stage<br>(GSD)", 
+                                "Total sample size<br>(fix)", "Total sample size<br>(GSD)")
+    datatable(adjust.table, escape = FALSE, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
+      'dilution effect &eta;',
       target = 'row',
       backgroundColor = styleEqual(value$etaGSD, 'lightblue')
     )
