@@ -213,8 +213,16 @@ navbarPage("Power Implications for Reduced Sample Size",
            # Group Sequential Design (end)
            # ***************************************************
            tabPanel("Help",
-                    fluidPage(
-                      fluidRow(column (7, withMathJax(includeMarkdown("help.md"))))
+                    fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general.md"))))),
+                    tabsetPanel(
+                      tabPanel("Power Evaluation", fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general_eval.md")))))),
+                      tabPanel("Group Sequential Design", fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general_gsd.md"))))))
                     )
            )
+           
+           # tabPanel("Help",
+           #          fluidPage(
+           #            fluidRow(column (8, withMathJax(includeMarkdown("help.md"))))
+           #          )
+           # )
 )

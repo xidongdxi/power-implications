@@ -261,111 +261,6 @@ function(input, output, session) {
     withMathJax(sprintf(HTML("Assuming a dilution effect of \\(\\eta = %.2f\\)  and a variance in-/deflation of \\(\\psi = %.2f\\), the adjusted sample sizes are"), value$etaGSD, value$psiGSD))
   })
   
-  # adjustN <- reactive({ # Create table for the resulting sample sizes (independent of input value for tau/psi)
-  #   # values for tau
-  #   TAU = seq(0.10, 0.90, 0.10)*100
-  #   adjust = matrix(NA, ncol=4, nrow=length(TAU))
-  #   for(tau in TAU) {
-  #     # for fixed design
-  #     if(tau/100*value$etaGSD^2-1+value$psiGSD==0) xi = tau/100 *(1-value$etaGSD)^2/(1-tau/100 * value$etaGSD * (2-value$etaGSD))
-  #     else if(tau/100*value$etaGSD^2-1+value$psiGSD!=0) xi = (value$psiGSD - 2 * tau/100 * value$etaGSD * (1-value$etaGSD) - sqrt(value$psiGSD^2 - 4*tau/100 * (1-value$etaGSD) * (value$etaGSD + value$psiGSD - 1)))/(2*(value$psiGSD - 1 + tau/100 * value$etaGSD^2))
-  #     # for GSD
-  #     n0 = Nfix()*tau/100
-  #     prec <- 1
-  #     nu <- 0
-  #     no <- 10000
-  #     while(prec > 0.1){
-  #       n1.tilde.gsd <- (nu + no)/2
-  #       crit = getDesignGroupSequential(
-  #         kMax = 2,
-  #         typeOfDesign = input$designSelect, 
-  #         informationRates = c(n0/(n0+n1.tilde.gsd), 1),
-  #         alpha = input$alphaGSD, 
-  #         sided = 1)$criticalValues
-  #       power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
-  #       power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-  #                           mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, 
-  #                                    sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD), 
-  #                           sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
-  #       ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
-  #       prec <- no - nu
-  #     }
-  #     adjust[which(tau==TAU), 1:4] = c(tau, ceiling(Nfix()*tau/100), ceiling(Nfix()*tau/100*(1-xi)/xi), ceiling(n1.tilde.gsd))
-  #   }
-  #   return(adjust)
-  # })
-  # 
-  # adjustNinput <- reactive({ # Add row for input value of tau
-  #   if(input$tauGSD/100*value$etaGSD^2-1+value$psiGSD==0) xi = input$tauGSD/100 *(1-value$etaGSD)^2/(1-input$tauGSD/100 * value$etaGSD * (2-value$etaGSD))
-  #   else if(input$tauGSD/100*value$etaGSD^2-1+value$psiGSD!=0) xi = (value$psiGSD - 2 * input$tauGSD/100 * value$etaGSD * (1-value$etaGSD) - sqrt(value$psiGSD^2 - 4*input$tauGSD/100 * (1-value$etaGSD) * (value$etaGSD + value$psiGSD - 1)))/(2*(value$psiGSD - 1 + input$tauGSD/100 * value$etaGSD^2))
-  #   n0 = Nfix()*input$tauGSD/100
-  #   prec <- 1
-  #   nu <- 0
-  #   no <- 10000
-  #   while(prec > 0.1){
-  #     n1.tilde.gsd <- (nu + no)/2
-  #     crit = getDesignGroupSequential(
-  #       kMax = 2,
-  #       typeOfDesign = input$designSelect, 
-  #       informationRates = c(n0/(n0+n1.tilde.gsd), 1),
-  #       alpha = input$alphaGSD, 
-  #       sided = 1)$criticalValues
-  #     power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
-  #     power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-  #                         mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, 
-  #                                  sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD), 
-  #                         sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
-  #     ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
-  #     prec <- no - nu
-  #   }
-  #   adjust = rbind(adjustN(),
-  #                  c(input$tauGSD, ceiling(Nfix()*input$tauGSD/100), Nfix()*input$tauGSD/100*(1-xi)/xi, n1.tilde.gsd)
-  #   )
-  #   adjust = adjust[order(adjust[,1]),]
-  #   adjust = adjust[!duplicated(adjust[,1]),]
-  #   return(adjust)
-  # })
-  # 
-  # output$power_plotlyGSD <- renderPlotly({ # GSD Plot in Tab: Power Information
-  #   data.gsd = powerGSDinput()
-  #   data_plot <- data.frame(Proportion=rep(data.gsd[, 1], 3), Power=as.vector(data.gsd[, 2:4]),
-  #                           Type=rep(c("Available", "GSD (stage 1)", "GSD (overall)"), each=nrow(data.gsd)))
-  #   data_plot$Type <- factor(data_plot$Type, levels=c("Available", "GSD (stage 1)", "GSD (overall)"))
-  #   data_plot$Power <- round(data_plot$Power,2)
-  #   p <- ggplot(data_plot, aes(x = Proportion, y = Power, color = Type)) +
-  #     geom_line(linetype = 1, size = 1) +
-  #     xlab("Proportion (%) of data available") +
-  #     ylab("Power (%)") +
-  #     xlim(0,100) +
-  #     ylim(0,100) +
-  #     theme_bw() +
-  #     scale_color_manual(values = c("Available" = "#0460A9", "GSD (stage 1)" = "#EC9A1E", "GSD (overall)" = "#8D1F1B")) +
-  #     theme(text = element_text(size = 12, face = "bold"),
-  #           plot.title = element_text(colour = "black", size = 12, face = "bold", hjust = 0),
-  #           legend.title = element_blank(),
-  #           plot.margin = unit(c(0.3, 0.3, 0.3, 0.3), "cm"),
-  #           legend.text = element_text(colour = "black", size = 12, face = "bold")
-  #     )
-  #   ggplotly(p)
-  #   
-  # })
-  # 
-  # output$adjust_tableGSD <- DT::renderDataTable({ # GSD Table in Tab: Power Information
-  #   adjust.gsd = adjustNinput()
-  #   adjust.table = adjust.gsd[which(round(adjust.gsd[,1],0)%%10==0 | adjust.gsd[,1]==input$tauGSD ),]
-  #   adjust.table = adjust.table[!duplicated(round(adjust.table[,1])),]
-  #   adjust.table = cbind(adjust.table, adjust.table[,2]+adjust.table[,3], adjust.table[,2]+adjust.table[,4])
-  #   adjust.table[, 2:6] <- sprintf("%.0f",  adjust.table[, 2:6])
-  #   adjust.table = data.frame(adjust.table)
-  #   colnames(adjust.table) <- c("tau", "n0", "n1 (fix)", "n1 (GSD)", "N (fix)", "N (GSD)")
-  #   datatable(adjust.table, options = list(dom = 't', pageLength = 12)) %>% formatStyle(
-  #     'tau',
-  #     target = 'row',
-  #     backgroundColor = styleEqual(input$tauGSD, 'lightblue')
-  #   )
-  # }, server = TRUE)
-  
-  
   #*****************************************
   # depending on ETA
   #*****************************************
@@ -453,41 +348,12 @@ function(input, output, session) {
       backgroundColor = styleEqual(value$etaGSD, 'lightblue')
     )
   }, server = TRUE)
-  
-  
-  # output$power_plotlyETA <- renderPlotly({ # GSD Plot in Tab: Power Information
-  #   data.gsd = rbind(adjustNeta(), adjustNinputEta())
-  #   data.gsd = data.gsd[order(data.gsd[,1]),]
-  #   data.gsd = data.gsd[!duplicated(round(data.gsd[,1],3)),]
-  #   data.gsd = cbind(data.gsd, data.gsd[,2]+data.gsd[,3], data.gsd[,2]+data.gsd[,4])
-  # 
-  #   data_plot <- data.frame(Eta=rep(data.gsd[, 1], 5), SampleSize=as.vector(data.gsd[, 2:6]),
-  #                           Type=rep(c("n0", "n1 (fix)", "n1 (GSD)", "N (fix)", "N (GSD)"), each=nrow(data.gsd)))
-  #   data_plot$Type <- factor(data_plot$Type, levels=c("n0", "n1 (fix)", "n1 (GSD)", "N (fix)", "N (GSD)"))
-  #   data_plot$SampleSize <- round(data_plot$SampleSize,2)
-  #   p <- ggplot(data_plot, aes(x = Eta, y = SampleSize, color = Type)) +
-  #     geom_line(linetype = 1, size = 1) +
-  #     xlab("Eta") +
-  #     ylab("Sample Size") +
-  #     xlim(0,1) +
-  #     ylim(0,1000) +
-  #     theme_bw() +
-  #     scale_color_manual(values = c("n0" = "#0460A9", "n1 (fix)" = "#EC9A1E", "n1 (GSD)" = "#8D1F1B", "N (fix)" = "#bf7504", "N (GSD)" = "#690703")) +
-  #     theme(text = element_text(size = 12, face = "bold"),
-  #           plot.title = element_text(colour = "black", size = 12, face = "bold", hjust = 0),
-  #           legend.title = element_blank(),
-  #           plot.margin = unit(c(0.3, 0.3, 0.3, 0.3), "cm"),
-  #           legend.text = element_text(colour = "black", size = 12, face = "bold")
-  #     )
-  #   ggplotly(p)
-  # 
-  # })
-
-
-  
-  
+ 
   #********************************************************************************************************
   # GSD end
   #********************************************************************************************************
+  
+
+  
   
 }
