@@ -34,4 +34,5 @@ Continuing the same illustrative example, the revised power as indicated above i
 The extension of the power calculation above to additionally accommodate varying the effect size, i.e., a power curve, is $$f(k)=P\left[Z>z_\alpha-k\sqrt{p}(z_\alpha+z_\beta)\right],$$ where $k$ denotes the ratio of the effect size relative to the hypothesized effect that yielded power $1-\beta$ for the original design.
 
 ##### Reference
-TBD
+Akacha M, Branson J, Bretz F, Dharan B, Gallo P, Gathmann I, Hemmings R, Jones J, Xi D, Zuber E (2020): Challenges in assessing the impact of the COVID-19 pandemic on the
+integrity and interpretability of clinical trials. To appear in Statistics in Biopharmaceutical Research.
