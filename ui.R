@@ -123,7 +123,7 @@ navbarPage("Power Implications for Reduced Sample Size",
                                   "right",
                                   trigger = "hover", options = list(container = "body")
                         ),
-                        selectInput(inputId = "designSelect", label="Type of GSD", 
+                        selectInput(inputId = "designSelect", label="Type of group sequential design", 
                                     choices = c("Pocock" = "P", 
                                                 "O'Brien-Fleming"="OF"), 
                                     selected="Pocock"),
@@ -213,8 +213,10 @@ navbarPage("Power Implications for Reduced Sample Size",
            # Group Sequential Design (end)
            # ***************************************************
            tabPanel("Help",
-                    fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general.md"))))),
+                    fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_info.md"))))),
+                    br(),
                     tabsetPanel(
+                      tabPanel("Overview", fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general.md")))))),
                       tabPanel("Power Evaluation", fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general_eval.md")))))),
                       tabPanel("Group Sequential Design", fluidPage(fluidRow(column (8, withMathJax(includeMarkdown("help_general_gsd.md"))))))
                     )

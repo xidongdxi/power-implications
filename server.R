@@ -111,7 +111,7 @@ function(input, output, session) {
   
   output$dilutionSettings <- renderUI({ # show input for eta if box is unticked
     if(input$dilutionCheck == FALSE) {
-      sliderInput("etaGSD", label=HTML("Dilution effect &eta;"), min = 0, max = 1, value = 0)
+      numericInput("etaGSD", label=HTML("Dilution effect &eta;"), min = 0, max = 1, value = 0, step = 0.01)
     }
   })
   observeEvent(input$etaGSD, { # update eta according to slider
@@ -205,8 +205,8 @@ function(input, output, session) {
   output$power_plotlyGSD <- renderPlotly({ # GSD Plot in Tab: Power Information
     data.gsd = powerGSDinput()
     data_plot <- data.frame(Proportion=rep(data.gsd[, 1], 3), Power=as.vector(data.gsd[, 2:4]),
-                            Type=rep(c("Available", "GSD (stage 1)", "GSD (overall)"), each=nrow(data.gsd)))
-    data_plot$Type <- factor(data_plot$Type, levels=c("Available", "GSD (stage 1)", "GSD (overall)"))
+                            Type=rep(c("Fixed sample test", "GSD (stage 1)", "GSD (overall)"), each=nrow(data.gsd)))
+    data_plot$Type <- factor(data_plot$Type, levels=c("Fixed sample test", "GSD (stage 1)", "GSD (overall)"))
     data_plot$Power <- round(data_plot$Power,2)
     p <- ggplot(data_plot, aes(x = Proportion, y = Power, color = Type)) +
       geom_line(linetype = 1, size = 1) +
@@ -215,7 +215,7 @@ function(input, output, session) {
       xlim(0,100) +
       ylim(0,100) +
       theme_bw() +
-      scale_color_manual(values = c("Available" = "#0460A9", "GSD (stage 1)" = "#EC9A1E", "GSD (overall)" = "#8D1F1B")) +
+      scale_color_manual(values = c("Fixed sample test" = "#0460A9", "GSD (stage 1)" = "#EC9A1E", "GSD (overall)" = "#8D1F1B")) +
       theme(text = element_text(size = 12, face = "bold"),
             plot.title = element_text(colour = "black", size = 12, face = "bold", hjust = 0),
             legend.title = element_blank(),
@@ -277,7 +277,7 @@ function(input, output, session) {
         n0 = Nfix()*input$tauGSD/100
         prec <- 1
         nu <- 0
-        no <- 100000
+        no <- 10^7
         while(prec > 0.1){
           n1.tilde.gsd <- (nu + no)/2
           crit = getDesignGroupSequential(
@@ -294,9 +294,9 @@ function(input, output, session) {
           ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
           prec <- no - nu
         }
+        if(n1.tilde.gsd>=(10^7-1)) n1.tilde.gsd = NA
         adjust[which(eta==ETA), 1:4] = c(eta, ceiling(Nfix()*input$tauGSD/100), ceiling(Nfix()*input$tauGSD/100*(1-xi)/xi), ceiling(n1.tilde.gsd))
         incProgress(1/length(ETA), detail = paste("Calculating results for eta = ", eta))
-        
       }
     })
     return(adjust)
@@ -308,7 +308,7 @@ function(input, output, session) {
     n0 = Nfix()*input$tauGSD/100
     prec <- 1
     nu <- 0
-    no <- 10000
+    no <- 10^7
     while(prec > 0.1){
       n1.tilde.gsd <- (nu + no)/2
       crit = getDesignGroupSequential(
@@ -325,6 +325,7 @@ function(input, output, session) {
       ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
       prec <- no - nu
     }
+    if(n1.tilde.gsd>=(10^7-1)) n1.tilde.gsd = NA
     return(c(value$etaGSD, ceiling(Nfix()*input$tauGSD/100), Nfix()*input$tauGSD/100*(1-xi)/xi, n1.tilde.gsd))
   })
   
