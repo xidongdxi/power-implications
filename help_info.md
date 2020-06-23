@@ -1,7 +1,5 @@
 #### User Guide to Power Implications - R Shiny App
 
-Paul Gallo, Cornelia Ursula Kunz, [Dong Xi](mailto:dong.xi@novartis.com)
+Cornelia Ursula Kunz, Paul Gallo, [Dong Xi](mailto:dong.xi@novartis.com)
 
-Citation: TBD
-
-Click on the respective tabs below to receive more information on this app.
+Click on the respective tabs below for more information about this app.
