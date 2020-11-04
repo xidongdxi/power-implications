@@ -288,9 +288,11 @@ function(input, output, session) {
             sided = 1)$criticalValues
           power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
           power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
-                              mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, 
-                                       sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-eta))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD), 
-                              sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
+                              mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/sqrt(input$varGSD), 
+                                       sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-eta))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/sqrt(input$varGSD)), 
+                              sigma = matrix(c(1, sqrt((n0/(n0+n1.tilde.gsd))/(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*value$psiGSD)), 
+                                               sqrt((n0/(n0+n1.tilde.gsd))/(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*value$psiGSD)), 1), 
+                                             ncol=2))[1]
           ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
           prec <- no - nu
         }
@@ -318,10 +320,12 @@ function(input, output, session) {
         alpha = input$alphaGSD,
         sided = 1)$criticalValues
       power.1 = 1-pnorm(crit[1], mean = sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD, sd=1)
-      power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]),
-                          mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/input$varGSD,
-                                   sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/input$varGSD),
-                          sigma = matrix(c(1, sqrt(n0/(n0+n1.tilde.gsd)), sqrt(n0/(n0+n1.tilde.gsd)), 1), ncol=2))[1]
+      power.2 = 1-pmvnorm(lower = c(-Inf, -Inf), upper = c(crit[1], crit[2]), 
+                          mean = c(sqrt(n0*input$r/(input$r+1)^2)*input$deltaGSD/sqrt(input$varGSD), 
+                                   sqrt((n0+n1.tilde.gsd)*input$r/(input$r+1)^2)*(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*(1-value$etaGSD))/sqrt(n0/(n0+n1.tilde.gsd) + (1-n0/(n0+n1.tilde.gsd))*value$psiGSD) * input$deltaGSD/sqrt(input$varGSD)), 
+                          sigma = matrix(c(1, sqrt((n0/(n0+n1.tilde.gsd))/(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*value$psiGSD)), 
+                                           sqrt((n0/(n0+n1.tilde.gsd))/(n0/(n0+n1.tilde.gsd)+(1-n0/(n0+n1.tilde.gsd))*value$psiGSD)), 1), 
+                                         ncol=2))[1]
       ifelse(power.2 < input$powerGSD/100, nu <- n1.tilde.gsd,  no <- n1.tilde.gsd)
       prec <- no - nu
     }
