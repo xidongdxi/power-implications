@@ -20,4 +20,4 @@ The underlying methodology can be found in the paper cited in the reference sect
 
 ##### Reference
 
-Kunz CU, Joergens S, Bretz F, Stallard N, Van Lancker K, Xi D, Zohar S, Gerlinger C, Friede T (2020): Clinical trials impacted by the COVID-19 pandemic: Adaptive designs to the rescue? Statistics in Biopharmaceutical Research, 12:4, 461-477.
+Kunz CU, Joergens S, Bretz F, Stallard N, Van Lancker K, Xi D, Zohar S, Gerlinger C, Friede T. (2020). Clinical trials impacted by the COVID-19 pandemic: Adaptive designs to the rescue? Statistics in Biopharmaceutical Research, 12:4, 461-477.
